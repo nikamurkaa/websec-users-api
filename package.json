@@ -1,16 +1,29 @@
 {
-  "name": "lab5-websec-users-api",
+  "name": "websec-users-api",
   "version": "1.0.0",
-  "main": "app.js",
+  "description": "Educational Express API security lab: response filtering, authorization, and mass-assignment protection.",
+  "main": "src/server.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node app.js"
+    "start": "node src/server.js",
+    "test": "node --test",
+    "check": "node --check src/server.js && node --check src/app.js && node --check tests/users-api.test.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "nodejs",
+    "express",
+    "api-security",
+    "web-security",
+    "owasp-api",
+    "authorization",
+    "validation"
+  ],
+  "author": "Nicole Zhurbenko",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
-    "body-parser": "^2.2.2",
     "express": "^5.2.1"
   }
 }

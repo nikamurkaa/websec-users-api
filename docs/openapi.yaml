@@ -1,0 +1,98 @@
+openapi: 3.0.3
+info:
+  title: WebSec Users API
+  version: 1.0.0
+  description: Educational Express API security lab with response filtering, role-based authorization and mass-assignment protection.
+servers:
+  - url: http://localhost:3000
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      security: []
+      summary: Health check
+      responses:
+        '200':
+          description: Service is available
+  /users:
+    get:
+      summary: List users
+      description: Admin-only endpoint. Returns filtered user DTOs.
+      responses:
+        '200':
+          description: Users list
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Admin role is required
+  /users/me:
+    get:
+      summary: Current user profile
+      responses:
+        '200':
+          description: Current user profile
+        '401':
+          description: Missing or invalid token
+  /users/{userId}:
+    get:
+      summary: Get user by public ID
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          example: usr_user_001
+      responses:
+        '200':
+          description: User profile
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: User can access only own profile
+        '404':
+          description: User not found
+    patch:
+      summary: Update user by public ID
+      description: Allows only displayName, email and password fields.
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          example: usr_user_001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                displayName:
+                  type: string
+                  example: Updated User
+                email:
+                  type: string
+                  example: updated@example.com
+                password:
+                  type: string
+                  example: NewPassword123!
+      responses:
+        '200':
+          description: Updated user profile
+        '400':
+          description: Invalid update payload
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: User can update only own profile
+        '404':
+          description: User not found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
