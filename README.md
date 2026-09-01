@@ -1,35 +1,23 @@
 # WebSec Users API
 
-Учебный backend-проект по безопасности API: небольшое приложение на **Node.js + Express**, в котором реализованы безопасные сценарии управления пользователями.
+**WebSec Users API** — учебный security lab на **Node.js + Express** про безопасное управление пользовательскими данными и контроль доступа в REST API.
 
-Проект показывает, как защищать API от типичных ошибок:
+Проект сфокусирован на типичных API Security ошибках: раскрытии внутренних полей, доступе к чужим объектам, недостаточной авторизации и mass assignment.
 
-- раскрытие лишних данных в ответах API;
-- отсутствие проверки прав доступа;
-- доступ пользователя к чужим данным;
-- небезопасное обновление полей пользователя;
-- mass assignment / попытка повысить роль через тело запроса.
-
-> Проект является учебным security lab и предназначен для портфолио. Это не production-ready система авторизации.
+> Это учебный security lab для портфолио, а не production-ready identity service.
 
 ## Что демонстрирует проект
 
-В проекте реализованы:
-
-- REST API на Express;
-- разделение приложения на `app`, `server`, `routes`, `middleware`, `services`, `data`;
-- Bearer token authentication для демонстрации контроля доступа;
-- role-based authorization для admin/user;
-- owner-based authorization: пользователь может читать и изменять только свой профиль;
-- фильтрация ответов: API не отдаёт `passwordHash`, `token`, `internalNotes`, `databaseId`;
-- allowlist-валидация обновлений: разрешены только `displayName`, `email`, `password`;
+- Bearer token authentication для демонстрационного API;
+- role-based authorization для `admin` и `user`;
+- owner-based access control: пользователь работает только со своим профилем;
+- response filtering: наружу не уходят `passwordHash`, token, internal notes и database ID;
+- allowlist обновляемых полей;
+- защита от mass assignment и попытки повысить роль через request body;
 - единый JSON-формат ошибок;
-- OpenAPI-спецификация;
-- Postman-коллекция;
-- автотесты на встроенном `node:test`;
-- GitHub Actions CI.
+- OpenAPI, Postman, automated tests и GitHub Actions CI.
 
-## Стек технологий
+## Стек
 
 - Node.js
 - Express
@@ -39,73 +27,41 @@
 - Postman
 - GitHub Actions
 
-## Структура проекта
+## Структура
 
 ```text
 websec-users-api/
 ├── src/
-│   ├── app.js
-│   ├── server.js
-│   ├── data/
-│   │   └── users.js
-│   ├── middleware/
-│   │   ├── auth.js
-│   │   └── errors.js
 │   ├── routes/
-│   │   └── users.js
+│   ├── middleware/
 │   ├── services/
-│   │   └── users.js
+│   ├── data/
 │   └── utils/
-│       └── password.js
 ├── tests/
-│   └── users-api.test.js
 ├── docs/
-│   ├── manual-checks.md
-│   ├── openapi.yaml
-│   ├── security-model.md
-│   └── test-plan.md
 ├── postman/
-│   ├── websec-users-api.postman_collection.json
-│   └── websec-users-api.local.postman_environment.json
 ├── .github/workflows/ci.yml
 ├── .env.example
-├── .editorconfig
-├── .gitignore
-├── LICENSE
 ├── package.json
 └── README.md
 ```
 
-## Установка и запуск
-
-### 1. Клонировать репозиторий
+## Локальный запуск
 
 ```bash
-git clone https://github.com/kindarufy/websec-users-api.git
+git clone https://github.com/nikamurkaa/websec-users-api.git
 cd websec-users-api
-```
-
-### 2. Установить зависимости
-
-```bash
 npm install
-```
-
-### 3. Запустить приложение
-
-```bash
 npm start
 ```
 
-По умолчанию API будет доступно по адресу:
+API по умолчанию:
 
 ```text
 http://localhost:3000
 ```
 
-## Переменные окружения
-
-Пример переменных находится в файле `.env.example`:
+Пример `.env`:
 
 ```env
 PORT=3000
@@ -113,219 +69,53 @@ ADMIN_TOKEN=admin-demo-token
 USER_TOKEN=user-demo-token
 ```
 
-Если переменные окружения не заданы, приложение использует demo-токены по умолчанию.
+Эти токены являются только локальными демонстрационными значениями.
 
-## Demo-токены
+## Основные endpoint'ы
 
-| Роль | Bearer token |
-|---|---|
-| Admin | `admin-demo-token` |
-| User | `user-demo-token` |
+| Метод | Endpoint | Доступ |
+| --- | --- | --- |
+| `GET` | `/health` | Public |
+| `GET` | `/users/me` | Authenticated user |
+| `GET` | `/users` | Admin |
+| `GET` | `/users/:id` | Owner или admin |
+| `PATCH` | `/users/:id` | Owner или admin с ограничением полей |
 
-Пример заголовка:
+Разрешённые поля обновления:
 
-```http
-Authorization: Bearer admin-demo-token
-```
+- `displayName`;
+- `email`;
+- `password`.
 
-## API endpoints
+Передача `role`, внутренних ID и других запрещённых полей отклоняется.
 
-### Health check
+## Security model
 
-```http
-GET /health
-```
+| Риск | Защита |
+| --- | --- |
+| Sensitive data exposure | public DTO / response filtering |
+| Broken object authorization | owner check + admin override |
+| Excessive privileges | RBAC |
+| Mass assignment | allowlist полей PATCH |
+| Непредсказуемые ошибки | единый JSON error handler |
 
-Пример ответа:
+Подробнее: [`docs/security-model.md`](docs/security-model.md).
 
-```json
-{
-  "status": "ok",
-  "service": "websec-users-api"
-}
-```
-
-### Получить текущего пользователя
-
-```http
-GET /users/me
-Authorization: Bearer user-demo-token
-```
-
-### Получить список пользователей
-
-```http
-GET /users
-Authorization: Bearer admin-demo-token
-```
-
-Доступно только администратору.
-
-Ответ не содержит чувствительных полей:
-
-```json
-[
-  {
-    "id": "usr_admin_001",
-    "username": "admin",
-    "displayName": "System Administrator",
-    "email": "admin@example.com",
-    "role": "admin"
-  }
-]
-```
-
-### Получить пользователя по ID
-
-```http
-GET /users/usr_user_001
-Authorization: Bearer user-demo-token
-```
-
-Обычный пользователь может получить только свой профиль. Администратор может получить любой профиль.
-
-### Обновить пользователя
-
-```http
-PATCH /users/usr_user_001
-Authorization: Bearer user-demo-token
-Content-Type: application/json
-```
-
-Разрешены только эти поля:
-
-- `displayName`
-- `email`
-- `password`
-
-Пример корректного запроса:
-
-```json
-{
-  "displayName": "Updated User",
-  "email": "updated@example.com"
-}
-```
-
-Попытка изменить роль будет отклонена:
-
-```json
-{
-  "role": "admin"
-}
-```
-
-Пример ответа:
-
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid update payload.",
-    "details": [
-      "Only displayName, email and password can be updated. Forbidden fields: role."
-    ]
-  }
-}
-```
-
-## Безопасность API
-
-Проект демонстрирует защиту от нескольких типичных API security проблем.
-
-| Проблема | Как исправлено |
-|---|---|
-| Excessive Data Exposure | В ответах используется public DTO без `passwordHash`, `token`, `internalNotes`, `databaseId` |
-| Broken Object Level Authorization | Пользователь может читать и изменять только свой профиль |
-| Broken Function Level Authorization | Список всех пользователей доступен только admin |
-| Mass Assignment | Обновление работает только через allowlist полей |
-| Plaintext Password Storage | Пароли не хранятся в открытом виде, используется PBKDF2 hash |
-
-Подробнее: [`docs/security-model.md`](docs/security-model.md)
-
-## Ручная проверка
-
-Все команды для ручной проверки находятся в файле:
-
-```text
-docs/manual-checks.md
-```
-
-Пример проверки списка пользователей от имени администратора:
-
-```bash
-curl -H "Authorization: Bearer admin-demo-token" http://localhost:3000/users
-```
-
-Пример проверки запрета mass assignment:
-
-```bash
-curl -X PATCH http://localhost:3000/users/usr_user_001 \
-  -H "Authorization: Bearer admin-demo-token" \
-  -H "Content-Type: application/json" \
-  -d '{"role":"admin"}'
-```
-
-## Автотесты
-
-Запуск тестов:
+## Проверка
 
 ```bash
 npm test
-```
-
-Проверка синтаксиса основных файлов:
-
-```bash
 npm run check
 ```
 
-В тестах проверяется:
+Ручные сценарии: [`docs/manual-checks.md`](docs/manual-checks.md).  
+OpenAPI: [`docs/openapi.yaml`](docs/openapi.yaml).  
+Postman: [`postman/`](postman/).
 
-- доступность `/health`;
-- запрет доступа без токена;
-- запрет просмотра списка пользователей обычному пользователю;
-- доступ администратора к списку пользователей;
-- отсутствие чувствительных полей в ответах;
-- доступ пользователя к своему профилю;
-- запрет доступа к чужому профилю;
-- запрет mass assignment;
-- успешное обновление разрешённых полей.
+## Статус
 
-## OpenAPI
+Проект завершён и используется как portfolio lab по **API authorization, object-level access control и защите пользовательских данных**.
 
-Спецификация API находится в файле:
+## Автор
 
-```text
-docs/openapi.yaml
-```
-
-Её можно открыть в Swagger Editor или использовать как документацию к API.
-
-## Postman
-
-Postman-коллекция и environment находятся в папке:
-
-```text
-postman/
-```
-
-Импортируй в Postman:
-
-- `websec-users-api.postman_collection.json`
-- `websec-users-api.local.postman_environment.json`
-
-## CI
-
-В проекте настроен GitHub Actions workflow:
-
-```text
-.github/workflows/ci.yml
-```
-
-CI устанавливает зависимости, проверяет синтаксис и запускает автотесты.
-
-## Статус проекта
-
-Проект выполнен как учебная работа по безопасности веб-приложений и оформлен как портфолио-проект. Он показывает понимание базовых принципов API Security и аккуратную организацию небольшого backend-приложения.
-
+[Николь Журбенко](https://github.com/nikamurkaa)
