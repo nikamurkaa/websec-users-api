@@ -4,7 +4,7 @@
 
 Проект сфокусирован на типичных API Security ошибках: раскрытии внутренних полей, доступе к чужим объектам, недостаточной авторизации и mass assignment.
 
-> Это учебный security lab для портфолио, а не production-ready identity service.
+> Это учебный security lab, а не production-ready identity service.
 
 ## Что демонстрирует проект
 
@@ -114,7 +114,7 @@ Postman: [`postman/`](postman/).
 
 ## Статус
 
-Проект завершён и используется как portfolio lab по **API authorization, object-level access control и защите пользовательских данных**.
+Проект завершён как учебный lab по **API authorization, object-level access control и защите пользовательских данных**.
 
 ## Автор
 
