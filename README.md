@@ -101,6 +101,26 @@ USER_TOKEN=user-demo-token
 
 Подробнее: [`docs/security-model.md`](docs/security-model.md).
 
+## Демонстрация security controls
+
+### Фильтрация чувствительных данных
+
+API возвращает только публичные данные пользователя. В response отсутствуют внутренние поля, включая password hash, token, internal notes и database ID.
+
+![WebSec Users API — response filtering](docs/assets/users-api-response-filtering.png)
+
+### Object-level access control
+
+Обычный пользователь не может получить профиль другого пользователя. Попытка доступа к чужому объекту отклоняется с `403 Forbidden`.
+
+![WebSec Users API — owner access denied](docs/assets/users-api-owner-access-denied.png)
+
+### Защита от mass assignment
+
+Попытка изменить защищённое поле `role` через обычный `PATCH` отклоняется allowlist-валидацией.
+
+![WebSec Users API — mass assignment blocked](docs/assets/users-api-mass-assignment-blocked.png)
+
 ## Проверка
 
 ```bash
