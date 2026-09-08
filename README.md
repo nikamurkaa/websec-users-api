@@ -48,12 +48,20 @@ websec-users-api/
 
 ## Локальный запуск
 
+Используйте Node.js 22 (минимум 18). Проверьте `node --version`.
+
+
 ```bash
 git clone https://github.com/nikamurkaa/websec-users-api.git
 cd websec-users-api
-npm install
-npm start
+npm ci
+cp .env.example .env
+node --env-file=.env src/server.js
 ```
+
+Команда выше рассчитана на Node.js 22 и явно загружает `.env`.
+`npm start` использует только переменные процесса и встроенные значения;
+сам по себе файл `.env` этот скрипт не читает.
 
 API по умолчанию:
 
@@ -139,3 +147,7 @@ Postman: [`postman/`](postman/).
 ## Автор
 
 [Николь Журбенко](https://github.com/nikamurkaa)
+
+Команды выполняются из корня репозитория. Остановка сервера — `Ctrl+C`.
+В PowerShell файл окружения можно скопировать командой
+`Copy-Item .env.example .env`.
