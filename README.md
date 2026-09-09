@@ -1,23 +1,25 @@
+**English** | [Русский](README.ru.md)
+
 # WebSec Users API
 
-**WebSec Users API** — учебный security lab на **Node.js + Express** про безопасное управление пользовательскими данными и контроль доступа в REST API.
+**WebSec Users API** is an educational security lab built with **Node.js + Express**, focused on secure user data management and access control in REST APIs.
 
-Проект сфокусирован на типичных API Security ошибках: раскрытии внутренних полей, доступе к чужим объектам, недостаточной авторизации и mass assignment.
+The project addresses common API Security mistakes: exposing internal fields, accessing other users' objects, insufficient authorization, and mass assignment.
 
-> Это учебный security lab, а не production-ready identity service.
+> This is an educational security lab, not a production-ready identity service.
 
-## Что демонстрирует проект
+## Skills demonstrated
 
-- Bearer token authentication для демонстрационного API;
-- role-based authorization для `admin` и `user`;
-- owner-based access control: пользователь работает только со своим профилем;
-- response filtering: наружу не уходят `passwordHash`, token, internal notes и database ID;
-- allowlist обновляемых полей;
-- защита от mass assignment и попытки повысить роль через request body;
-- единый JSON-формат ошибок;
-- OpenAPI, Postman, automated tests и GitHub Actions CI.
+- Bearer token authentication for a demonstration API;
+- role-based authorization for `admin` and `user`;
+- owner-based access control: users can work only with their own profiles;
+- response filtering: `passwordHash`, tokens, internal notes, and database IDs are not exposed;
+- an allowlist of updatable fields;
+- protection against mass assignment and attempts to elevate roles through the request body;
+- a consistent JSON error format;
+- OpenAPI, Postman, automated tests, and GitHub Actions CI.
 
-## Стек
+## Tech stack
 
 - Node.js
 - Express
@@ -27,7 +29,7 @@
 - Postman
 - GitHub Actions
 
-## Структура
+## Structure
 
 ```text
 websec-users-api/
@@ -46,12 +48,12 @@ websec-users-api/
 └── README.md
 ```
 
-## Локальный запуск
+## Local setup
 
-Используйте Node.js 22 (минимум 18). Проверьте `node --version`.
+Use Node.js 22 (minimum 18). Check `node --version`.
 
-Команды выполняются из корня репозитория. В PowerShell файл окружения
-можно скопировать командой `Copy-Item .env.example .env`.
+Run the commands from the repository root. In PowerShell, copy the environment file
+with `Copy-Item .env.example .env`.
 
 ```bash
 git clone https://github.com/nikamurkaa/websec-users-api.git
@@ -61,19 +63,19 @@ cp .env.example .env
 node --env-file=.env src/server.js
 ```
 
-Команда выше рассчитана на Node.js 22 и явно загружает `.env`.
-`npm start` использует только переменные процесса и встроенные значения;
-сам по себе файл `.env` этот скрипт не читает.
+The command above targets Node.js 22 and explicitly loads `.env`.
+`npm start` uses only process environment variables and built-in defaults;
+the script does not read `.env` on its own.
 
-API по умолчанию:
+Default API address:
 
 ```text
 http://localhost:3000
 ```
 
-Остановка сервера — `Ctrl+C`.
+Stop the server with `Ctrl+C`.
 
-Пример `.env`:
+Example `.env`:
 
 ```env
 PORT=3000
@@ -81,73 +83,73 @@ ADMIN_TOKEN=admin-demo-token
 USER_TOKEN=user-demo-token
 ```
 
-Эти токены являются только локальными демонстрационными значениями.
+These tokens are local demonstration values only.
 
-## Основные endpoint'ы
+## Main endpoints
 
-| Метод | Endpoint | Доступ |
+| Method | Endpoint | Access |
 | --- | --- | --- |
 | `GET` | `/health` | Public |
 | `GET` | `/users/me` | Authenticated user |
 | `GET` | `/users` | Admin |
-| `GET` | `/users/:id` | Owner или admin |
-| `PATCH` | `/users/:id` | Owner или admin с ограничением полей |
+| `GET` | `/users/:id` | Owner or admin |
+| `PATCH` | `/users/:id` | Owner or admin, with field restrictions |
 
-Разрешённые поля обновления:
+Allowed update fields:
 
 - `displayName`;
 - `email`;
 - `password`.
 
-Передача `role`, внутренних ID и других запрещённых полей отклоняется.
+Requests containing `role`, internal IDs, or other disallowed fields are rejected.
 
 ## Security model
 
-| Риск | Защита |
+| Risk | Protection |
 | --- | --- |
 | Sensitive data exposure | public DTO / response filtering |
 | Broken object authorization | owner check + admin override |
 | Excessive privileges | RBAC |
-| Mass assignment | allowlist полей PATCH |
-| Непредсказуемые ошибки | единый JSON error handler |
+| Mass assignment | PATCH field allowlist |
+| Inconsistent errors | Central JSON error handler |
 
-Подробнее: [`docs/security-model.md`](docs/security-model.md).
+See [`docs/security-model.md`](docs/security-model.md) for details.
 
-## Демонстрация security controls
+## Security control demonstrations
 
-### Фильтрация чувствительных данных
+### Sensitive data filtering
 
-API возвращает только публичные данные пользователя. В response отсутствуют внутренние поля, включая password hash, token, internal notes и database ID.
+The API returns only public user data. Responses exclude internal fields, including password hashes, tokens, internal notes, and database IDs.
 
 ![WebSec Users API — response filtering](docs/assets/users-api-response-filtering.png)
 
 ### Object-level access control
 
-Обычный пользователь не может получить профиль другого пользователя. Попытка доступа к чужому объекту отклоняется с `403 Forbidden`.
+A regular user cannot retrieve another user's profile. Attempts to access another user's object are rejected with `403 Forbidden`.
 
 ![WebSec Users API — owner access denied](docs/assets/users-api-owner-access-denied.png)
 
-### Защита от mass assignment
+### Mass assignment protection
 
-Попытка изменить защищённое поле `role` через обычный `PATCH` отклоняется allowlist-валидацией.
+An attempt to change the protected `role` field through a regular `PATCH` request is rejected by allowlist validation.
 
 ![WebSec Users API — mass assignment blocked](docs/assets/users-api-mass-assignment-blocked.png)
 
-## Проверка
+## Verification
 
 ```bash
 npm test
 npm run check
 ```
 
-Ручные сценарии: [`docs/manual-checks.md`](docs/manual-checks.md).  
+Manual scenarios: [`docs/manual-checks.md`](docs/manual-checks.md).  
 OpenAPI: [`docs/openapi.yaml`](docs/openapi.yaml).  
 Postman: [`postman/`](postman/).
 
-## Статус
+## Status
 
-Проект завершён как учебный lab по **API authorization, object-level access control и защите пользовательских данных**.
+Completed as an educational lab on **API authorization, object-level access control, and user data protection**.
 
-## Автор
+## Author
 
-[Николь Журбенко](https://github.com/nikamurkaa)
+[Nicole Zhurbenko](https://github.com/nikamurkaa)
